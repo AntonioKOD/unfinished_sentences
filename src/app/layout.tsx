@@ -49,13 +49,27 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/favicon.ico', sizes: '16x16 32x32' },
     ],
     apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180' },
-      { url: '/icon-192.png', sizes: '192x192' },
+      { url: '/apple-touch-icon.svg', sizes: '180x180', type: 'image/svg+xml' },
+      { url: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
     ],
     shortcut: '/favicon.ico',
+    other: [
+      {
+        rel: 'icon',
+        url: '/icon-192.svg',
+        sizes: '192x192',
+        type: 'image/svg+xml',
+      },
+      {
+        rel: 'icon',
+        url: '/icon-512.svg',
+        sizes: '512x512',
+        type: 'image/svg+xml',
+      },
+    ],
   },
   manifest: '/manifest.json',
   openGraph: {
@@ -145,7 +159,9 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <meta name="theme-color" content="#D9A5B3" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />

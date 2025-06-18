@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="bg192" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D9A5B3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#B8869A;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="192" height="192" fill="url(#bg192)" rx="24"/>
+  
+  <!-- Letter "U" for Unfinished -->
+  <path d="M 48 45 L 48 105 Q 48 135 75 135 L 117 135 Q 144 135 144 105 L 144 45" 
+        stroke="#FFFFFF" stroke-width="14" fill="none" stroke-linecap="round"/>
+  
+  <!-- Three dots representing unfinished thoughts -->
+  <circle cx="65" cy="160" r="5" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="96" cy="160" r="5" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="127" cy="160" r="5" fill="#FFFFFF" opacity="0.4"/>
+</svg> 
