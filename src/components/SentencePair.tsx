@@ -27,9 +27,40 @@ const getMoodColor = (mood: string) => {
   return colors[mood as keyof typeof colors] || 'var(--accent-rose)';
 };
 
+// Generate realistic timestamps based on mood and content
+const generateTimeAgo = (index: number, mood: string, content: string) => {
+  // Create a pseudo-random seed based on content and mood
+  const seed = (content.length + mood.length + index) % 13;
+  
+  const timeOptions = [
+    'just now', '2m ago', '5m ago', '11m ago', '23m ago', '37m ago', '52m ago',
+    '1h ago', '2h ago', '3h ago', '5h ago', '7h ago', '11h ago', 
+    '1d ago', '2d ago', '3d ago', '5d ago', '1w ago', '2w ago', '3w ago'
+  ];
+  
+  // Newer content for positive moods, older for reflective moods
+  let timeIndex;
+  if (['joyful', 'hopeful'].includes(mood)) {
+    timeIndex = seed % 10; // Recent times (0-9: just now to 2h ago)
+  } else if (['sad', 'nostalgic'].includes(mood)) {
+    timeIndex = (seed + 8) % timeOptions.length; // Older times, more spread
+  } else if (['grateful'].includes(mood)) {
+    timeIndex = (seed + 5) % 15; // Medium range
+  } else if (['angry', 'frustrated'].includes(mood)) {
+    timeIndex = seed % 8; // Recent times (fresh emotions)
+  } else if (['anxious'].includes(mood)) {
+    timeIndex = (seed + 2) % 12; // Recent to medium range
+  } else {
+    timeIndex = (seed + 3) % timeOptions.length; // Default spread
+  }
+  
+  return timeOptions[timeIndex];
+};
+
 export default function SentencePair({ start, completion, mood, index }: SentencePairProps) {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const moodColor = getMoodColor(mood);
+  const timeAgo = generateTimeAgo(index, mood, start + completion);
 
 
 
@@ -78,7 +109,7 @@ export default function SentencePair({ start, completion, mood, index }: Sentenc
             {mood}
           </span>
           <span className="text-[var(--muted)] opacity-60 text-xs">
-            2h ago
+            {timeAgo}
           </span>
         </div>
         
