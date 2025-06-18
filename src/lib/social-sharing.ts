@@ -151,14 +151,15 @@ export const generateQuoteImage = (quote: ShareableQuote): Promise<string> => {
 
 // Share via Web Share API
 export const shareQuote = async (quote: ShareableQuote) => {
-  const text = `"${quote.startText}"\n\n"${quote.completionText}"\n\n✨ Created on Unfinished Sentences`;
+  const shareableLink = generateShareableLink(quote);
+  const text = `"${quote.startText}"\n\n"${quote.completionText}"\n\n✨ Created on Unfinished Sentences\n${shareableLink}`;
   
   if (navigator.share) {
     try {
       await navigator.share({
-        title: 'Unfinished Sentences',
-        text,
-        url: window.location.origin
+        title: `"${quote.startText}" - Unfinished Sentences`,
+        text: `"${quote.startText}"\n\n"${quote.completionText}"\n\n✨ Created on Unfinished Sentences`,
+        url: shareableLink
       });
     } catch (error) {
       console.log('Share cancelled or failed:', error);
@@ -167,7 +168,7 @@ export const shareQuote = async (quote: ShareableQuote) => {
     // Fallback: Copy to clipboard
     await navigator.clipboard.writeText(text);
     // You could show a toast notification here
-    alert('Quote copied to clipboard!');
+    alert('Quote and link copied to clipboard!');
   }
 };
 
@@ -185,19 +186,22 @@ export const downloadQuoteImage = async (quote: ShareableQuote) => {
 
 // Share to specific platforms
 export const shareToTwitter = (quote: ShareableQuote) => {
+  const shareableLink = generateShareableLink(quote);
   const text = `"${quote.startText}"\n\n"${quote.completionText}"\n\n✨ Created on Unfinished Sentences`;
-  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.origin)}`;
+  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareableLink)}`;
   window.open(url, '_blank', 'width=600,height=400');
 };
 
 export const shareToFacebook = (quote: ShareableQuote) => {
-  const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}&quote=${encodeURIComponent(`"${quote.startText}" "${quote.completionText}"`)}`;
+  const shareableLink = generateShareableLink(quote);
+  const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareableLink)}&quote=${encodeURIComponent(`"${quote.startText}" "${quote.completionText}"`)}`;
   window.open(url, '_blank', 'width=600,height=400');
 };
 
 export const shareToLinkedIn = (quote: ShareableQuote) => {
+  const shareableLink = generateShareableLink(quote);
   const text = `"${quote.startText}" "${quote.completionText}" - Created on Unfinished Sentences`;
-  const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin)}&summary=${encodeURIComponent(text)}`;
+  const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareableLink)}&summary=${encodeURIComponent(text)}`;
   window.open(url, '_blank', 'width=600,height=400');
 };
 
@@ -210,6 +214,17 @@ export const generateShareableLink = (quote: ShareableQuote): string => {
   });
   
   return `${window.location.origin}/shared?${params.toString()}`;
+};
+
+// Generate Open Graph image URL
+export const generateOGImageUrl = (quote: ShareableQuote): string => {
+  const params = new URLSearchParams({
+    start: quote.startText,
+    completion: quote.completionText,
+    mood: quote.mood
+  });
+  
+  return `${window.location.origin}/api/og?${params.toString()}`;
 };
 
 // Create beautiful text-based social media post

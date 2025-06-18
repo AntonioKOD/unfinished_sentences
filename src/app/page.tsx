@@ -70,6 +70,15 @@ const mockCompletedPairs = [
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'create' | 'complete' | 'browse' | 'themes'>('themes');
+
+  // Handle tab switching from URL params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab && ['create', 'complete', 'browse', 'themes'].includes(tab)) {
+      setActiveTab(tab as 'create' | 'complete' | 'browse' | 'themes');
+    }
+  }, []);
   const [currentSentence, setCurrentSentence] = useState('');
   const [userInput, setUserInput] = useState('');
   const [completedPairs, setCompletedPairs] = useState(mockCompletedPairs);
