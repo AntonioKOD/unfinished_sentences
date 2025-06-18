@@ -3,7 +3,7 @@
 
 export interface SentenceSuggestion {
   text: string;
-  mood: 'melancholy' | 'nostalgic' | 'hopeful' | 'grateful';
+  mood: 'sad' | 'nostalgic' | 'hopeful' | 'grateful' | 'frustrated' | 'angry' | 'anxious' | 'joyful';
   category: string;
 }
 
@@ -14,7 +14,7 @@ export interface CompletionSuggestion {
 
 // Curated sentence starters organized by emotion and theme
 const sentenceTemplates = {
-  melancholy: [
+  sad: [
     "I never got to tell you that...",
     "The last time I saw you, I...",
     "In my dreams, we still...",
@@ -53,6 +53,46 @@ const sentenceTemplates = {
     "The gift you gave me was...",
     "I appreciate how you...",
     "Your love taught me that...",
+  ],
+  frustrated: [
+    "I'm so tired of pretending that...",
+    "It drives me crazy when...",
+    "Why is it so hard to...",
+    "I'm fed up with...",
+    "Nobody seems to understand that...",
+    "I keep hitting the same wall when...",
+    "It's exhausting to always...",
+    "I'm done with people who...",
+  ],
+  angry: [
+    "What really pisses me off is...",
+    "I'm sick of being told that...",
+    "They have no right to...",
+    "I refuse to accept that...",
+    "It's infuriating how...",
+    "I'm not going to pretend that...",
+    "The audacity of people who...",
+    "I'm angry that I have to...",
+  ],
+  anxious: [
+    "I can't shake this feeling that...",
+    "What if everyone finds out that...",
+    "I'm terrified that...",
+    "My mind keeps racing about...",
+    "I'm scared that people will...",
+    "The thought of [something] makes me...",
+    "I lie awake worrying that...",
+    "What if I'm not...",
+  ],
+  joyful: [
+    "I can barely contain my excitement about...",
+    "Every time I think about [something], I...",
+    "I'm buzzing with energy because...",
+    "I can't wait to tell everyone that...",
+    "My heart races when I imagine...",
+    "I feel most alive when...",
+    "The happiness is overwhelming when...",
+    "I could dance forever because...",
   ]
 };
 
@@ -264,16 +304,31 @@ export const generateAICompletion = async (startText: string): Promise<string> =
   return defaultCompletions[Math.floor(Math.random() * defaultCompletions.length)];
 };
 
-export const analyzeSentimentAndSuggestMood = (text: string): 'melancholy' | 'nostalgic' | 'hopeful' | 'grateful' => {
+export const analyzeSentimentAndSuggestMood = (text: string): 'sad' | 'nostalgic' | 'hopeful' | 'grateful' | 'frustrated' | 'angry' | 'anxious' | 'joyful' => {
   const lowerText = text.toLowerCase();
   
+  // Positive emotions
   if (lowerText.includes('thank') || lowerText.includes('grateful') || lowerText.includes('appreciate')) {
     return 'grateful';
-  } else if (lowerText.includes('hope') || lowerText.includes('dream') || lowerText.includes('future')) {
+  } else if (lowerText.includes('hope') || lowerText.includes('dream') || lowerText.includes('future') || lowerText.includes('believe')) {
     return 'hopeful';
-  } else if (lowerText.includes('remember') || lowerText.includes('used to') || lowerText.includes('back then')) {
+  } else if (lowerText.includes('excited') || lowerText.includes('can\'t wait') || lowerText.includes('pumped') || lowerText.includes('buzzing') || lowerText.includes('joy') || lowerText.includes('happy') || lowerText.includes('alive')) {
+    return 'joyful';
+  
+  // Negative emotions
+  } else if (lowerText.includes('pissed') || lowerText.includes('angry') || lowerText.includes('rage') || lowerText.includes('furious') || lowerText.includes('infuriating')) {
+    return 'angry';
+  } else if (lowerText.includes('frustrated') || lowerText.includes('tired of') || lowerText.includes('fed up') || lowerText.includes('exhausting')) {
+    return 'frustrated';
+  } else if (lowerText.includes('anxious') || lowerText.includes('worried') || lowerText.includes('scared') || lowerText.includes('terrified') || lowerText.includes('what if')) {
+    return 'anxious';
+  
+  // Nostalgic
+  } else if (lowerText.includes('remember') || lowerText.includes('used to') || lowerText.includes('back then') || lowerText.includes('miss')) {
     return 'nostalgic';
+  
+  // Default to sad for introspective content
   } else {
-    return 'melancholy';
+    return 'sad';
   }
 }; 

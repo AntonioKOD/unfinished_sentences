@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+
 import { motion } from 'framer-motion';
-import { Share2, Download, Heart, ArrowLeft } from 'lucide-react';
+import { Share2, Download, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { shareQuote, downloadQuoteImage } from '@/lib/social-sharing';
 
@@ -12,8 +12,23 @@ interface SharedQuoteClientProps {
   mood: string;
 }
 
+// Mood color mapping
+const getMoodColor = (mood: string) => {
+  const colors = {
+    sad: '#6B7280', // gray
+    nostalgic: '#8B7CF6', // purple
+    hopeful: '#10B981', // emerald
+    grateful: '#F59E0B', // amber
+    frustrated: '#DC2626', // red
+    angry: '#B91C1C', // dark red
+    anxious: '#7C3AED', // violet
+    joyful: '#EC4899', // pink
+  };
+  return colors[mood as keyof typeof colors] || 'var(--accent-rose)';
+};
+
 export default function SharedQuoteClient({ start, completion, mood }: SharedQuoteClientProps) {
-  const [isLiked, setIsLiked] = useState(false);
+  const moodColor = getMoodColor(mood);
 
   const quote = {
     startText: start,
@@ -83,27 +98,17 @@ export default function SharedQuoteClient({ start, completion, mood }: SharedQuo
               </p>
             </div>
 
-            {/* Mood and Actions */}
-            <div className="flex items-center justify-center gap-6 pt-8 border-t border-[var(--border)]">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-[var(--muted)] capitalize font-medium">
-                  {mood}
-                </span>
-              </div>
-              
-              <motion.button
-                onClick={() => setIsLiked(!isLiked)}
-                className={`flex items-center gap-2 text-sm transition-colors ${
-                  isLiked 
-                    ? 'text-[var(--accent-rose)]' 
-                    : 'text-[var(--muted)] hover:text-[var(--accent-rose)]'
-                }`}
-                whileHover={{ y: -1 }}
-                whileTap={{ y: 0 }}
+            {/* Mood Badge */}
+            <div className="flex items-center justify-center pt-8 border-t border-[var(--border)]">
+              <span 
+                className="capitalize font-medium px-4 py-2 rounded-full text-sm"
+                style={{ 
+                  color: moodColor, 
+                  backgroundColor: `${moodColor}15` 
+                }}
               >
-                <Heart size={16} fill={isLiked ? 'currentColor' : 'none'} />
-                Like
-              </motion.button>
+                {mood}
+              </span>
             </div>
           </div>
         </motion.div>
