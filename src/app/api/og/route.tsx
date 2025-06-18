@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
+// Cache the response for 1 hour
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     // For brand/main page sharing
     if (type === 'brand' || (!start && !completion)) {
-      return new ImageResponse(
+      const response = new ImageResponse(
         (
           <div
             style={{
@@ -122,6 +123,10 @@ export async function GET(request: NextRequest) {
           height: 630,
         }
       );
+
+      // Add cache headers
+      response.headers.set('Cache-Control', 'public, max-age=86400, s-maxage=86400'); // Cache for 24 hours
+      return response;
     }
 
     // For quote sharing
@@ -135,7 +140,7 @@ export async function GET(request: NextRequest) {
 
       const colorScheme = moodColors[mood as keyof typeof moodColors] || moodColors.hopeful;
 
-      return new ImageResponse(
+      const response = new ImageResponse(
         (
           <div
             style={{
@@ -258,6 +263,10 @@ export async function GET(request: NextRequest) {
           height: 630,
         }
       );
+
+      // Add cache headers for quote images (longer cache since content is unique)
+      response.headers.set('Cache-Control', 'public, max-age=2592000, s-maxage=2592000'); // Cache for 30 days
+      return response;
     }
 
     // Fallback
