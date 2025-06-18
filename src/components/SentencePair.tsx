@@ -17,14 +17,9 @@ export default function SentencePair({ start, completion, mood, index }: Sentenc
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
 
-  const moodColors = {
-    melancholy: 'from-gray-500 to-blue-600',
-    nostalgic: 'from-amber-500 to-orange-600',
-    hopeful: 'from-green-500 to-blue-600',
-    grateful: 'from-pink-500 to-purple-600'
-  };
 
-  const moodGradient = moodColors[mood as keyof typeof moodColors] || 'from-purple-500 to-blue-600';
+
+
 
   const quote = {
     startText: start,
@@ -49,11 +44,11 @@ export default function SentencePair({ start, completion, mood, index }: Sentenc
     >
       <div className="space-y-6 text-center">
         <p className="text-xl font-serif leading-relaxed quote-start">
-          "{start}"
+          &ldquo;{start}&rdquo;
         </p>
         <div className="divider max-w-md mx-auto"></div>
         <p className="text-lg font-serif leading-relaxed quote-completion italic">
-          "{completion}"
+          &ldquo;{completion}&rdquo;
         </p>
       </div>
       

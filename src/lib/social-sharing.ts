@@ -84,7 +84,7 @@ export const generateQuoteImage = (quote: ShareableQuote): Promise<string> => {
     let startLine = '';
     let startY = 320;
     
-    for (let word of startWords) {
+    for (const word of startWords) {
       const testLine = startLine + word + ' ';
       const metrics = ctx.measureText(testLine);
       if (metrics.width > 800 && startLine !== '') {
@@ -106,7 +106,7 @@ export const generateQuoteImage = (quote: ShareableQuote): Promise<string> => {
     let completionLine = '';
     let completionY = startY + 100;
     
-    for (let word of completionWords) {
+    for (const word of completionWords) {
       const testLine = completionLine + word + ' ';
       const metrics = ctx.measureText(testLine);
       if (metrics.width > 800 && completionLine !== '') {
@@ -150,7 +150,7 @@ export const generateQuoteImage = (quote: ShareableQuote): Promise<string> => {
 };
 
 // Share via Web Share API
-export const shareQuote = async (quote: ShareableQuote, imageUrl?: string) => {
+export const shareQuote = async (quote: ShareableQuote) => {
   const text = `"${quote.startText}"\n\n"${quote.completionText}"\n\n✨ Created on Unfinished Sentences`;
   
   if (navigator.share) {

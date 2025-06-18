@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PenTool, Shuffle, BookOpen, ArrowRight, Sparkles, Calendar } from 'lucide-react';
+import { Shuffle, ArrowRight } from 'lucide-react';
 import SentencePair from '@/components/SentencePair';
 import FloatingQuote from '@/components/FloatingQuote';
 import DailyTheme from '@/components/DailyTheme';
@@ -11,7 +11,6 @@ import {
   getRandomUnfinishedSentence, 
   addUnfinishedSentence, 
   addCompletedPair,
-  getRecentCompletedPairs,
   subscribeToCompletedPairs 
 } from '@/lib/database';
 import { 
@@ -77,13 +76,28 @@ export default function Home() {
   const [currentRandomIndex, setCurrentRandomIndex] = useState(0);
   const [isLoadingNewSentence, setIsLoadingNewSentence] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string>('');
-  const [todaysTheme, setTodaysTheme] = useState(getTodaysTheme());
+  const [todaysTheme] = useState(getTodaysTheme());
+
+  const loadRandomSentence = useCallback(async () => {
+    try {
+      const sentence = await getRandomUnfinishedSentence();
+      if (sentence) {
+        setCurrentSentence(sentence.text);
+      } else {
+        // Fallback to mock data
+        setCurrentSentence(mockUnfinishedSentences[currentRandomIndex]);
+      }
+    } catch (error) {
+      console.error('Error loading sentence:', error);
+      setCurrentSentence(mockUnfinishedSentences[currentRandomIndex]);
+    }
+  }, [currentRandomIndex]);
 
   useEffect(() => {
     if (activeTab === 'complete') {
       loadRandomSentence();
     }
-  }, [activeTab, currentRandomIndex]);
+  }, [activeTab, currentRandomIndex, loadRandomSentence]);
 
   useEffect(() => {
     // Load real-time completed pairs
@@ -97,21 +111,6 @@ export default function Home() {
 
     return () => unsubscribe();
   }, []);
-
-  const loadRandomSentence = async () => {
-    try {
-      const sentence = await getRandomUnfinishedSentence();
-      if (sentence) {
-        setCurrentSentence(sentence.text);
-      } else {
-        // Fallback to mock data
-        setCurrentSentence(mockUnfinishedSentences[currentRandomIndex]);
-      }
-    } catch (error) {
-      console.error('Error loading sentence:', error);
-      setCurrentSentence(mockUnfinishedSentences[currentRandomIndex]);
-    }
-  };
 
   const handleNewRandom = async () => {
     setIsLoadingNewSentence(true);
@@ -203,7 +202,7 @@ export default function Home() {
           ].map(({ id, label }) => (
             <motion.button
               key={id}
-              onClick={() => setActiveTab(id as any)}
+              onClick={() => setActiveTab(id as 'create' | 'complete' | 'browse' | 'themes')}
               className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 ${
                 activeTab === id
                   ? 'text-[var(--accent-rose)] border-[var(--accent-rose)]'
@@ -291,7 +290,7 @@ export default function Home() {
                   <div className="relative">
                     <div className="p-6 bg-[var(--highlight)] rounded-lg border border-[var(--border)] text-center">
                       <p className="text-xl font-serif text-[var(--foreground)] leading-relaxed italic mb-4">
-                        "{currentSentence}"
+                        &ldquo;{currentSentence}&rdquo;
                       </p>
                       <div className="flex items-center justify-center gap-3">
                         <motion.button
@@ -397,7 +396,7 @@ export default function Home() {
                     className="text-[var(--muted)] italic"
                     whileHover={{ y: -1 }}
                   >
-                    💭 Trust your first instinct - it's usually the most honest
+                    💭 Trust your first instinct - it&rsquo;s usually the most honest
                   </motion.div>
                   <motion.div 
                     className="text-[var(--muted)] italic"
@@ -415,7 +414,7 @@ export default function Home() {
                     className="text-[var(--muted)] italic"
                     whileHover={{ y: -1 }}
                   >
-                    🤝 You're connecting with a real person's vulnerability
+                    🤝 You&rsquo;re connecting with a real person&rsquo;s vulnerability
                   </motion.div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-[var(--border)]">
@@ -534,7 +533,7 @@ export default function Home() {
                         whileHover={{ y: -1 }}
                         onClick={() => setUserInput(inspiration)}
                       >
-                        "{inspiration}"
+                        &ldquo;{inspiration}&rdquo;
                       </motion.div>
                     ))}
                   </div>

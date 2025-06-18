@@ -49,7 +49,7 @@ export default function DailyTheme() {
         </motion.div>
         
         <h3 className="text-2xl font-serif font-light text-[var(--foreground)] mb-4">
-          Today's Theme
+          Today&rsquo;s Theme
         </h3>
         <div className="divider max-w-xs mx-auto"></div>
       </div>
@@ -83,7 +83,7 @@ export default function DailyTheme() {
           </div>
           <div className="divider max-w-24 mx-auto mb-4"></div>
           <p className="text-[var(--foreground)] font-serif italic text-center leading-relaxed">
-            "{theme.prompt}"
+            &ldquo;{theme.prompt}&rdquo;
           </p>
         </motion.div>
 
@@ -117,7 +117,7 @@ export default function DailyTheme() {
                 transition={{ delay: 0.6 + index * 0.1 }}
               >
                 <span className="font-serif italic leading-relaxed">
-                  "{suggestion.text}"
+                  &ldquo;{suggestion.text}&rdquo;
                 </span>
                 {selectedSuggestion === suggestion.text && (
                   <motion.div
