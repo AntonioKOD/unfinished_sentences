@@ -1,26 +1,174 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Minimalist Poetic Color Palette */
+  --background: #FAF8F5; /* Off-white parchment */
+  --foreground: #1A1A1A; /* Charcoal black */
+  --accent: #9E9DAD; /* Faded indigo */
+  --accent-rose: #D9A5B3; /* Dusty rose */
+  --highlight: #F1E7DA; /* Warm beige */
+  --muted: #6B6B6B; /* Muted gray */
+  --border: #E8E6E1; /* Subtle border */
+  --card: #FFFFFF; /* Pure white cards */
+  --shadow: rgba(26, 26, 26, 0.08); /* Subtle shadow */
+  --paper-texture: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23F1E7DA' fill-opacity='0.03'%3E%3Cpath d='m36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-accent: var(--accent);
+  --color-accent-rose: var(--accent-rose);
+  --color-highlight: var(--highlight);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-card: var(--card);
+  --color-shadow: var(--shadow);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1A1A1A; /* Dark charcoal */
+    --foreground: #FAF8F5; /* Light parchment */
+    --accent: #B4B3C4; /* Lighter faded indigo */
+    --accent-rose: #E4B5C3; /* Lighter dusty rose */
+    --highlight: #2A2A2A; /* Dark highlight */
+    --muted: #9CA3AF; /* Light gray */
+    --border: #333333; /* Dark border */
+    --card: #252525; /* Dark card */
+    --shadow: rgba(250, 248, 245, 0.08); /* Light shadow for dark mode */
   }
 }
 
 body {
   background: var(--background);
+  background-image: var(--paper-texture);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+}
+
+/* Refined scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Gentle transitions */
+* {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Selection styling */
+::selection {
+  background: var(--highlight);
+  color: var(--foreground);
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Typography styles */
+.serif {
+  font-family: var(--font-serif), "Georgia", serif;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Paper texture overlay */
+.paper-texture::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: var(--paper-texture);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Floating card styles */
+.floating-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px var(--shadow);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.floating-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px var(--shadow);
+}
+
+/* Quote styles */
+.quote-start {
+  color: var(--accent-rose);
+  font-style: italic;
+}
+
+.quote-completion {
+  color: var(--accent);
+  font-weight: 400;
+}
+
+/* Subtle dividers */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 2rem 0;
+}
+
+/* Button styles */
+.btn-primary {
+  background: var(--accent);
+  color: var(--background);
+  border: 2px solid var(--accent);
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: var(--muted);
+  border-color: var(--muted);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--highlight);
+  transform: translateY(-1px);
 }

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <style>
+      .bg { fill: #FAF8F5; }
+      .text { fill: #1A1A1A; font-family: 'Playfair Display', serif; font-weight: 400; }
+      .accent { fill: #D9A5B3; font-style: italic; }
+    </style>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="100" height="100" class="bg" rx="8"/>
+  
+  <!-- Main text -->
+  <text x="50" y="35" text-anchor="middle" class="text" font-size="14" font-weight="300">Unfinished</text>
+  <text x="50" y="65" text-anchor="middle" class="accent" font-size="12">Sentences</text>
+  
+  <!-- Decorative dot -->
+  <circle cx="50" cy="75" r="1" class="accent"/>
+</svg> 

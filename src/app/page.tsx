@@ -1,103 +1,554 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { PenTool, Shuffle, BookOpen, ArrowRight, Sparkles, Calendar } from 'lucide-react';
+import SentencePair from '@/components/SentencePair';
+import FloatingQuote from '@/components/FloatingQuote';
+import DailyTheme from '@/components/DailyTheme';
+import BuyMeCoffee from '@/components/BuyMeCoffee';
+import { 
+  getRandomUnfinishedSentence, 
+  addUnfinishedSentence, 
+  addCompletedPair,
+  getRecentCompletedPairs,
+  subscribeToCompletedPairs 
+} from '@/lib/database';
+import { 
+  analyzeSentimentAndSuggestMood,
+  getTodaysTheme 
+} from '@/lib/ai-suggestions';
+
+// Mock data for demonstration
+const mockUnfinishedSentences = [
+  "I never got to tell you that...",
+  "The last time I saw them, I...",
+  "If I had one more moment, I would...",
+  "Sometimes I wonder what would happen if...",
+  "The thing I regret most is...",
+  "When I close my eyes, I can still...",
+  "I wish I had the courage to...",
+  "In my dreams, we still..."
+];
+
+const mockCompletedPairs = [
+  {
+    start: "I never got to tell you that...",
+    completion: "...I still check your name in my contacts, just to feel close to you.",
+    mood: "melancholy"
+  },
+  {
+    start: "If I had one more moment, I would...",
+    completion: "...tell you that your laugh was the soundtrack to my happiest days.",
+    mood: "nostalgic"
+  },
+  {
+    start: "Sometimes I wonder what would happen if...",
+    completion: "...we met in a different lifetime, where timing wasn't our enemy.",
+    mood: "hopeful"
+  },
+  {
+    start: "When I close my eyes, I can still...",
+    completion: "...feel your hand in mine on that cold December night.",
+    mood: "nostalgic"
+  },
+  {
+    start: "The thing I'm most grateful for is...",
+    completion: "...how you taught me that love doesn't always need words.",
+    mood: "grateful"
+  },
+  {
+    start: "In my dreams, we still...",
+    completion: "...dance in that kitchen to no music at all.",
+    mood: "melancholy"
+  },
+  {
+    start: "I wish I had the courage to...",
+    completion: "...tell everyone how much you changed my understanding of home.",
+    mood: "hopeful"
+  }
+];
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [activeTab, setActiveTab] = useState<'create' | 'complete' | 'browse' | 'themes'>('themes');
+  const [currentSentence, setCurrentSentence] = useState('');
+  const [userInput, setUserInput] = useState('');
+  const [completedPairs, setCompletedPairs] = useState(mockCompletedPairs);
+  const [currentRandomIndex, setCurrentRandomIndex] = useState(0);
+  const [isLoadingNewSentence, setIsLoadingNewSentence] = useState(false);
+  const [selectedMood, setSelectedMood] = useState<string>('');
+  const [todaysTheme, setTodaysTheme] = useState(getTodaysTheme());
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  useEffect(() => {
+    if (activeTab === 'complete') {
+      loadRandomSentence();
+    }
+  }, [activeTab, currentRandomIndex]);
+
+  useEffect(() => {
+    // Load real-time completed pairs
+    const unsubscribe = subscribeToCompletedPairs((pairs) => {
+      setCompletedPairs(pairs.map(pair => ({
+        start: pair.startText,
+        completion: pair.completionText,
+        mood: pair.mood
+      })));
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const loadRandomSentence = async () => {
+    try {
+      const sentence = await getRandomUnfinishedSentence();
+      if (sentence) {
+        setCurrentSentence(sentence.text);
+      } else {
+        // Fallback to mock data
+        setCurrentSentence(mockUnfinishedSentences[currentRandomIndex]);
+      }
+    } catch (error) {
+      console.error('Error loading sentence:', error);
+      setCurrentSentence(mockUnfinishedSentences[currentRandomIndex]);
+    }
+  };
+
+  const handleNewRandom = async () => {
+    setIsLoadingNewSentence(true);
+    setCurrentRandomIndex((prev) => (prev + 1) % mockUnfinishedSentences.length);
+    setUserInput('');
+    try {
+      await loadRandomSentence();
+    } finally {
+      setIsLoadingNewSentence(false);
+    }
+  };
+
+  const handleSubmitCompletion = async () => {
+    if (userInput.trim()) {
+      try {
+        const completionText = userInput.startsWith('...') ? userInput : `...${userInput}`;
+        const suggestedMood = analyzeSentimentAndSuggestMood(currentSentence + ' ' + completionText);
+        
+        // Save to Firebase
+        await addCompletedPair(
+          currentSentence,
+          completionText,
+          selectedMood || suggestedMood,
+          todaysTheme.title
+        );
+
+        setUserInput('');
+        handleNewRandom();
+      } catch (error) {
+        console.error('Error submitting completion:', error);
+        // Fallback to local state
+        const newPair = {
+          start: currentSentence,
+          completion: userInput.startsWith('...') ? userInput : `...${userInput}`,
+          mood: selectedMood || 'hopeful'
+        };
+        setCompletedPairs([newPair, ...completedPairs]);
+        setUserInput('');
+        handleNewRandom();
+      }
+    }
+  };
+
+  const handleSubmitStart = async () => {
+    if (userInput.trim()) {
+      try {
+        await addUnfinishedSentence(userInput, todaysTheme.title);
+        setUserInput('');
+      } catch (error) {
+        console.error('Error submitting sentence start:', error);
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[var(--background)] relative">
+      {/* Header */}
+      <header className="relative">
+        <div className="max-w-4xl mx-auto px-6 py-20 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <h1 className="text-4xl md:text-6xl font-serif font-light text-[var(--foreground)] mb-8 tracking-tight text-balance">
+              Unfinished
+              <span className="block font-medium text-[var(--accent-rose)] italic">
+                Sentences
+              </span>
+            </h1>
+            <div className="divider max-w-xs mx-auto"></div>
+            <p className="text-lg md:text-xl text-[var(--muted)] max-w-2xl mx-auto leading-relaxed font-light">
+              Share your unfinished thoughts with strangers who help complete them.
+              <br />
+              <span className="italic text-[var(--accent)]">Create poetry from vulnerability.</span>
+            </p>
+          </motion.div>
         </div>
+      </header>
+
+      {/* Navigation */}
+      <nav className="max-w-3xl mx-auto px-6 mb-16">
+        <div className="flex flex-wrap justify-center gap-1">
+          {[
+            { id: 'themes', label: "Today's Theme" },
+            { id: 'browse', label: 'Browse' },
+            { id: 'complete', label: 'Complete' },
+            { id: 'create', label: 'Create' }
+          ].map(({ id, label }) => (
+            <motion.button
+              key={id}
+              onClick={() => setActiveTab(id as any)}
+              className={`px-6 py-3 font-medium transition-all duration-300 border-b-2 ${
+                activeTab === id
+                  ? 'text-[var(--accent-rose)] border-[var(--accent-rose)]'
+                  : 'text-[var(--muted)] border-transparent hover:text-[var(--accent)] hover:border-[var(--highlight)]'
+              }`}
+              whileHover={{ y: -1 }}
+              whileTap={{ y: 0 }}
+            >
+              {label}
+            </motion.button>
+          ))}
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-6 pb-20">
+        <AnimatePresence mode="wait">
+          {activeTab === 'themes' && (
+            <motion.div
+              key="themes"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+            >
+              <DailyTheme />
+            </motion.div>
+          )}
+
+          {activeTab === 'browse' && (
+            <motion.div
+              key="browse"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="space-y-8"
+            >
+              <div className="text-center mb-16">
+                <h2 className="text-3xl font-serif font-light text-[var(--foreground)] mb-4">
+                  Recent Completions
+                </h2>
+                <div className="divider max-w-md mx-auto"></div>
+                <p className="text-[var(--muted)] font-light italic">
+                  Poetry created through shared vulnerability
+                </p>
+              </div>
+
+              <div className="grid gap-6">
+                {completedPairs.map((pair, index) => (
+                  <SentencePair
+                    key={index}
+                    start={pair.start}
+                    completion={pair.completion}
+                    mood={pair.mood}
+                    index={index}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'complete' && (
+            <motion.div
+              key="complete"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="max-w-2xl mx-auto"
+            >
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-serif font-light text-[var(--foreground)] mb-4">
+                  Complete a Thought
+                </h2>
+                <div className="divider max-w-md mx-auto"></div>
+                <p className="text-[var(--muted)] font-light italic">
+                  Help finish what someone else started
+                </p>
+              </div>
+
+              <div className="floating-card p-8">
+                <div className="space-y-6">
+                  {/* Current sentence display with refresh option */}
+                  <div className="relative">
+                    <div className="p-6 bg-[var(--highlight)] rounded-lg border border-[var(--border)] text-center">
+                      <p className="text-xl font-serif text-[var(--foreground)] leading-relaxed italic mb-4">
+                        "{currentSentence}"
+                      </p>
+                      <div className="flex items-center justify-center gap-3">
+                        <motion.button
+                          onClick={handleNewRandom}
+                          disabled={isLoadingNewSentence}
+                          className="btn-secondary text-sm disabled:opacity-50"
+                          whileHover={{ y: -1 }}
+                          whileTap={{ y: 0 }}
+                        >
+                          <Shuffle size={14} className={`mr-2 ${isLoadingNewSentence ? 'animate-spin' : ''}`} />
+                          {isLoadingNewSentence ? 'Loading...' : 'Try Another'}
+                        </motion.button>
+                        <span className="text-xs text-[var(--muted)] italic">
+                          or complete this one below
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <label className="block text-lg font-serif text-[var(--foreground)] mb-2">
+                        Your completion
+                      </label>
+                      <p className="text-sm text-[var(--muted)] italic">
+                        How would you finish this thought?
+                      </p>
+                    </div>
+                    
+                    <div className="relative">
+                      <textarea
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        placeholder="...type your completion here"
+                        className="w-full p-6 text-lg font-serif bg-[var(--card)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent resize-none h-32 text-center leading-relaxed placeholder:text-[var(--muted)] placeholder:italic"
+                        maxLength={200}
+                      />
+                      <div className="absolute bottom-2 right-3 text-xs text-[var(--muted)]">
+                        {userInput.length}/200
+                      </div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <p className="text-sm text-[var(--muted)] italic">
+                        Trust your instincts and authentic voice
+                      </p>
+                    </div>
+
+
+
+                    {/* Mood selector */}
+                    <div className="text-center">
+                      <p className="text-sm text-[var(--muted)] mb-3 italic">
+                        Choose the emotional tone (optional):
+                      </p>
+                      <div className="flex flex-wrap justify-center gap-2">
+                        {['melancholy', 'nostalgic', 'hopeful', 'grateful'].map((mood) => (
+                          <button
+                            key={mood}
+                            onClick={() => setSelectedMood(selectedMood === mood ? '' : mood)}
+                            className={`px-4 py-2 text-sm transition-colors capitalize border rounded-full ${
+                              selectedMood === mood
+                                ? 'bg-[var(--accent-rose)] text-[var(--card)] border-[var(--accent-rose)]'
+                                : 'bg-transparent text-[var(--muted)] border-[var(--border)] hover:bg-[var(--highlight)] hover:text-[var(--accent)]'
+                            }`}
+                          >
+                            {mood}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <button
+                      onClick={handleSubmitCompletion}
+                      disabled={!userInput.trim()}
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Submit Completion
+                      <ArrowRight size={16} className="ml-2" />
+                    </button>
+                    <p className="text-xs text-[var(--muted)] mt-3 italic">
+                      Your completion will be shared anonymously
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Helpful tips section */}
+              <motion.div 
+                className="mt-8 floating-card p-6 bg-[var(--highlight)] text-center"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                <h3 className="text-lg font-serif text-[var(--accent)] mb-4 italic">
+                  Completion Tips
+                </h3>
+                <div className="divider max-w-xs mx-auto mb-4"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <motion.div 
+                    className="text-[var(--muted)] italic"
+                    whileHover={{ y: -1 }}
+                  >
+                    💭 Trust your first instinct - it's usually the most honest
+                  </motion.div>
+                  <motion.div 
+                    className="text-[var(--muted)] italic"
+                    whileHover={{ y: -1 }}
+                  >
+                    ❤️ Write from the heart, not the head
+                  </motion.div>
+                  <motion.div 
+                    className="text-[var(--muted)] italic"
+                    whileHover={{ y: -1 }}
+                  >
+                    🌱 Every human story matters and deserves completion
+                  </motion.div>
+                  <motion.div 
+                    className="text-[var(--muted)] italic"
+                    whileHover={{ y: -1 }}
+                  >
+                    🤝 You're connecting with a real person's vulnerability
+                  </motion.div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-[var(--border)]">
+                  <p className="text-xs text-[var(--muted)] italic">
+                    Every human completion creates authentic, shared poetry
+                  </p>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {activeTab === 'create' && (
+            <motion.div
+              key="create"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="max-w-2xl mx-auto"
+            >
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-serif font-light text-[var(--foreground)] mb-4">
+                  Begin Something New
+                </h2>
+                <div className="divider max-w-md mx-auto"></div>
+                <p className="text-[var(--muted)] font-light italic">
+                  Share something you never got to say
+                </p>
+              </div>
+
+              <div className="floating-card p-8">
+                <div className="space-y-6">
+                                      <div className="space-y-6">
+                      <div className="text-center">
+                        <label className="block text-lg font-serif text-[var(--foreground)] mb-2">
+                          Your unfinished sentence
+                        </label>
+                        <p className="text-sm text-[var(--muted)] italic">
+                          Begin something that asks to be completed...
+                        </p>
+                      </div>
+                      
+                      <div className="relative">
+                        <textarea
+                          value={userInput}
+                          onChange={(e) => setUserInput(e.target.value)}
+                          placeholder="I never got to tell you that..."
+                          className="w-full p-6 text-lg font-serif bg-[var(--card)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent resize-none h-32 text-center leading-relaxed placeholder:text-[var(--muted)] placeholder:italic"
+                          maxLength={150}
+                        />
+                        <div className="absolute bottom-2 right-3 text-xs text-[var(--muted)]">
+                          {userInput.length}/150
+                        </div>
+                      </div>
+                      
+                      <div className="text-center">
+                        <p className="text-sm text-[var(--muted)] italic">
+                          Let your authentic voice guide you
+                        </p>
+                      </div>
+
+                                          {/* Mood selector */}
+                      <div className="text-center">
+                        <p className="text-sm text-[var(--muted)] mb-3 italic">
+                          Choose your emotional tone (optional):
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-2">
+                          {['melancholy', 'nostalgic', 'hopeful', 'grateful'].map((mood) => (
+                            <button
+                              key={mood}
+                              onClick={() => setSelectedMood(selectedMood === mood ? '' : mood)}
+                              className={`px-4 py-2 text-sm transition-colors capitalize border rounded-full ${
+                                selectedMood === mood
+                                  ? 'bg-[var(--accent-rose)] text-[var(--card)] border-[var(--accent-rose)]'
+                                  : 'bg-transparent text-[var(--muted)] border-[var(--border)] hover:bg-[var(--highlight)] hover:text-[var(--accent)]'
+                              }`}
+                            >
+                              {mood}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                    
+                  </div>
+
+                  <div className="text-center">
+                    <button
+                      onClick={handleSubmitStart}
+                      disabled={!userInput.trim()}
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Share Anonymously
+                      <ArrowRight size={16} className="ml-2" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+                              {/* Inspiration section */}
+                <div className="mt-12 floating-card p-6 bg-[var(--highlight)] text-center">
+                  <h3 className="text-lg font-serif text-[var(--accent)] mb-4 italic">
+                    Gentle Inspirations
+                  </h3>
+                  <div className="divider max-w-xs mx-auto mb-4"></div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    {[
+                      "I wish I had said...",
+                      "The thing I miss most is...",
+                      "If time could stop, I would...",
+                      "In another life, we..."
+                    ].map((inspiration, index) => (
+                      <motion.div
+                        key={index}
+                        className="text-[var(--muted)] font-serif italic hover:text-[var(--accent)] transition-colors cursor-pointer"
+                        whileHover={{ y: -1 }}
+                        onClick={() => setUserInput(inspiration)}
+                      >
+                        "{inspiration}"
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+      {/* Floating inspirational quotes */}
+      <FloatingQuote />
+      
+      {/* Buy me a coffee support button */}
+      <BuyMeCoffee />
     </div>
   );
 }
