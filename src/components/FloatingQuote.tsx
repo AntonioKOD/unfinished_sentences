@@ -20,18 +20,26 @@ const inspiringQuotes = [
 export default function FloatingQuote() {
   const [currentQuote, setCurrentQuote] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
+      setIsTransitioning(true);
       setIsVisible(false);
       setTimeout(() => {
         setCurrentQuote((prev) => (prev + 1) % inspiringQuotes.length);
         setIsVisible(true);
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 800); // Wait for fade-in to complete
       }, 800);
     }, 12000);
 
     return () => clearInterval(interval);
   }, []);
+
+  // Only animate when visible and not transitioning
+  const shouldAnimate = isVisible && !isTransitioning;
 
   return (
     <motion.div
@@ -52,13 +60,16 @@ export default function FloatingQuote() {
         {/* Decorative quote icon */}
         <motion.div
           className="absolute top-3 left-3"
-          animate={{ 
+          animate={shouldAnimate ? { 
             rotate: [0, 5, -5, 0],
             scale: [1, 1.1, 1]
+          } : {
+            rotate: 0,
+            scale: 1
           }}
           transition={{ 
             duration: 4,
-            repeat: Infinity,
+            repeat: shouldAnimate ? Infinity : 0,
             ease: "easeInOut"
           }}
         >
@@ -68,14 +79,17 @@ export default function FloatingQuote() {
         {/* Heart decoration */}
         <motion.div
           className="absolute top-3 right-3"
-          animate={{ 
+          animate={shouldAnimate ? { 
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.6, 0.3]
+          } : {
+            scale: 1,
+            opacity: 0.3
           }}
           transition={{ 
             duration: 3,
-            repeat: Infinity,
-            delay: 1
+            repeat: shouldAnimate ? Infinity : 0,
+            delay: shouldAnimate ? 1 : 0
           }}
         >
           <Heart className="text-[var(--accent-rose)] fill-current" size={12} />
@@ -93,13 +107,16 @@ export default function FloatingQuote() {
         
         <motion.div 
           className="divider max-w-16 mx-auto"
-          animate={{ 
+          animate={shouldAnimate ? { 
             scaleX: [0.5, 1, 0.8, 1],
             opacity: [0.3, 0.7, 0.5, 0.7]
+          } : {
+            scaleX: 0.7,
+            opacity: 0.5
           }}
           transition={{ 
             duration: 2,
-            repeat: Infinity,
+            repeat: shouldAnimate ? Infinity : 0,
             ease: "easeInOut"
           }}
         />
@@ -107,12 +124,14 @@ export default function FloatingQuote() {
         {/* Subtle floating animation */}
         <motion.div
           className="absolute inset-0 rounded-lg pointer-events-none"
-          animate={{ 
+          animate={shouldAnimate ? { 
             y: [0, -2, 0, -1, 0],
+          } : {
+            y: 0
           }}
           transition={{ 
             duration: 6,
-            repeat: Infinity,
+            repeat: shouldAnimate ? Infinity : 0,
             ease: "easeInOut"
           }}
         />
@@ -125,7 +144,7 @@ export default function FloatingQuote() {
       <motion.div
         className="flex justify-center mt-3 space-x-1"
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.4 }}
+        animate={{ opacity: shouldAnimate ? 0.4 : 0.2 }}
         transition={{ delay: 4 }}
       >
         {inspiringQuotes.map((_, index) => (
